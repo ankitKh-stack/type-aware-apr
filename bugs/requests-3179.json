@@ -1,0 +1,19 @@
+{
+  "id": "requests-3179",
+  "image": "pyter",
+  "workdir": "/pyter/benchmark/requests-3179",
+  "target_file": "requests/models.py",
+  "target_class": "Response",
+  "target_function": "json",
+  "test_command": "pytest tests/test_requests.py::TestRequests",
+  "bug_exposing_tests": [
+    "test_response_json_when_content_is_None",
+    "test_response_json_when_content_is_None_noassert"
+  ],
+  "env_setup": [
+    "export PYENV_ROOT=/home/wonseok/.pyenv",
+    "export PATH=\"$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH\""
+  ],
+  "buggy_file": "bugs/requests-3179/models_buggy.py",
+  "fixed_file": "bugs/requests-3179/models_fixed.py"
+}
