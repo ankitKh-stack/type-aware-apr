@@ -37,7 +37,7 @@ Each bug and condition pair is run 3 times.
   - Ubuntu/WSL: Python 3 (3.14), Docker and the `pyter` image.
   - About 20 GB of free disk space for the image (it is about 7.5 GB).
 - **Install:**
-  1. Python packages (currently `openai` and `python-dotenv`):
+  1. Python packages (currently `openai`, `python-dotenv` and `mypy`):
      - Windows: run `setup.bat` once. It checks python, docker and the `pyter` image, creates `.venv`, installs `requirements.txt` into it, and copies `.env.example` to `.env` if `.env` is missing.
      - Ubuntu/WSL: `python3 -m venv .venv`, then `source .venv/bin/activate`, then `python -m pip install -r requirements.txt`.
      - Always use `python -m pip`, never bare `pip` (a machine can have more than one Python).
@@ -82,6 +82,12 @@ python -m harness.classifier
 ```
 
 Runs requests-3179 on the developer fix, the buggy code and the saved C1 answer, and prints the result for each (expected: PASS, SAME_FAILURE, PASS).
+
+```
+python -m harness.clue_static requests-3179
+```
+
+Runs mypy on the buggy function of requests-3179 and prints the static clue.
 
 ## API key
 

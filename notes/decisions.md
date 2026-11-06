@@ -124,3 +124,14 @@
 - Stray tokens (task 1.9): two short test calls returned stray tokens at the end of the text (e.g. "Hello! I全国助残日"). The code passes content through unchanged. Watch whether real code answers stay clean.
 - First-block rule (task 1.11): A2's first-python-block rule cost one try in trial 1. The answer showed a one-line snippet before the full function, which gave SYNTAX_ERROR. We keep A2's rule for now.
 - First real run: 3 C1 trials on requests-3179, all plausible, total cost about 0.00096 USD.
+
+## 2026-11-06 Stage 2 Track A: runtime clue collector
+- The runtime type collector runs as a separate small container run after a failed attempt (as A2 says), not inside the normal test run. Why: C0 and C1 runs stay untouched, and it costs about one extra 5 s run per failed patch.
+- The runtime clue records the locals plus every name and attribute chain on the failing line (for example `self.content`, `self.encoding`), not only locals (changes A2 §6.2). Why: for requests-3179 the useful facts are attributes, not locals.
+- Clue extractors live in new files (`harness/clue_static.py`, `harness/clue_runtime.py`) so they don't conflict with Pravesh's `run.py` and `prompts.py` work.
+
+## 2026-11-06 Stage 2 Track A: static clue (mypy runner)
+- API: `static_clue(bug, source_path)` in `harness/clue_static.py` returns `ClueResult(text, failed, error)` from `harness/clues.py`. Empty text means nothing to report. `failed=True` means mypy crashed, timed out or the function was not found (A2 §8 tool-failure flag).
+- mypy runs on the host with `--check-untyped-defs --ignore-missing-imports --follow-imports=skip` and a 30 s timeout (our choice). It keeps only `error` lines inside the target function's line range (decorators included), recomputed on every patched file.
+- Line numbers in clues are relative to the function (line 1 = its first line, the decorator if there is one), because the model sees only the function (Ankit's choice; A2's example "line 4" is ambiguous). mypy's `[code]` suffix is stripped to match A2's example.
+- `mypy==2.4.0` is added to `requirements.txt`. Test fixture: `tests/fixtures/toy/shop.py`.
