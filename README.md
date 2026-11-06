@@ -32,12 +32,21 @@ Each bug and condition pair is run 3 times.
 - **Benchmark:** bugs from [PyTER](https://github.com/kupl/PyTER), run inside Docker so each bug gets the old Python version it needs.
 - **LLM:** DeepSeek (`deepseek-flash`, thinking disabled). Exact model, pricing and other settings are recorded in `notes/decisions.md`.
 - **Bug set:** TBD. The first bug being worked on is `requests-3179`.
+- **Requirements:**
+  - Windows: Python 3 for Windows (3.14 on both our machines), Docker Desktop and the `pyter` image. Nothing else (no bash, WSL or Unix tools).
+  - Ubuntu/WSL: Python 3 (3.14), Docker and the `pyter` image.
+  - About 20 GB of free disk space for the image (it is about 7.5 GB).
+- **Install:**
+  1. `pip install -r requirements.txt` (currently `openai` and `python-dotenv`).
+  2. The `pyter` image: download the image `.tar` from the figshare link in the [PyTER README](https://github.com/kupl/PyTER), then run `docker import <downloaded-file>.tar pyter`.
+  3. Check it worked: `docker images` should list a line starting with `pyter`.
 
-## Planned layout
+## Layout
 
 ```
-harness/   pipeline code
-bugs/      bug metadata and filter output
+harness/   pipeline code (a Python package; run modules from the repo root with python3 -m harness.NAME)
+bugs/      one JSON file per bug (bugs/requests-3179.json) plus a folder per bug
+           (bugs/requests-3179/: models_buggy.py, models_fixed.py, baseline.json)
 docker/    Dockerfiles
 notes/     bug cards, decisions.md, meeting notes
 results/   experiment logs
@@ -45,11 +54,25 @@ results/   experiment logs
 
 ## How to run
 
-TBD.
+Run everything from the repo root.
+
+```
+python3 -m harness.validator      (Windows: python -m harness.validator)
+```
+
+Runs requests-3179 on the buggy and the fixed file, checks the bug, and writes `bugs/requests-3179/baseline.json`. `run.bat` is added at the end of stage 1 (task 1.12).
+
+Full run: TBD
 
 ## API key
 
 The DeepSeek API key goes in a local `.env` file, which `.gitignore` already excludes. Never commit the key.
+
+## Conventions
+
+- Line endings: LF everywhere, except `.bat` files, which must be CRLF. `.gitattributes` enforces the `.bat` rule. In VS Code, check the bottom-right corner says LF (CRLF for `.bat`).
+- Paths: use `pathlib.Path`, relative to the repo root in config files. No hard-coded `/home/...` or `C:\...`.
+- Open files with `encoding="utf-8"`. Run programs as a list with `subprocess.run`, never `shell=True`.
 
 ## Authors
 
