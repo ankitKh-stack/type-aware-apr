@@ -36,6 +36,7 @@ def validate_bug(bug):
         "baseline_passing": [],
         "buggy_failing": [],
         "fixed_failing": [],
+        "original_errors": {},
     }
     buggy, problem = _run_and_parse(bug, bug["buggy_file"])
     if problem:
@@ -49,6 +50,9 @@ def validate_bug(bug):
     verdict["buggy_failing"] = sorted(n for n, c in buggy.items() if c["status"] in FAIL_STATUSES)
     verdict["fixed_failing"] = sorted(n for n, c in fixed.items() if c["status"] in FAIL_STATUSES)
     verdict["baseline_passing"] = sorted(n for n, c in fixed.items() if c["status"] == "passed")
+    verdict["original_errors"] = {
+        n: buggy[n]["message"] for n in bug["bug_exposing_tests"] if n in buggy
+    }
     verdict["exclusion_reason"] = _exclusion_reason(bug, buggy, fixed)
     verdict["valid"] = verdict["exclusion_reason"] is None
     return verdict
@@ -59,7 +63,11 @@ def baseline_path(bug):
 
 
 def save_baseline(bug, verdict):
-    data = {"bug_id": bug["id"], "baseline_passing": verdict["baseline_passing"]}
+    data = {
+        "bug_id": bug["id"],
+        "original_errors": verdict["original_errors"],
+        "baseline_passing": verdict["baseline_passing"],
+    }
     with open(baseline_path(bug), "w", encoding="utf-8", newline="\n") as f:
         json.dump(data, f, indent=2)
         f.write("\n")
@@ -67,7 +75,11 @@ def save_baseline(bug, verdict):
 
 def load_baseline(bug):
     with open(baseline_path(bug), encoding="utf-8") as f:
-        return set(json.load(f)["baseline_passing"])
+        data = json.load(f)
+    return {
+        "baseline_passing": set(data["baseline_passing"]),
+        "original_errors": data["original_errors"],
+    }
 
 
 if __name__ == "__main__":

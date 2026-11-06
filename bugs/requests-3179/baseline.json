@@ -1,5 +1,9 @@
 {
   "bug_id": "requests-3179",
+  "original_errors": {
+    "test_response_json_when_content_is_None": "TypeError: object of type 'NoneType' has no len()",
+    "test_response_json_when_content_is_None_noassert": "TypeError: object of type 'NoneType' has no len()"
+  },
   "baseline_passing": [
     "test_BASICAUTH_TUPLE_HTTP_200_OK_GET",
     "test_DIGESTAUTH_QUOTES_QOP_VALUE",
