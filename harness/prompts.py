@@ -1,4 +1,4 @@
-from harness.classifier import SAME_FAILURE, NEW_FAILURE
+from harness.classifier import SAME_FAILURE, NEW_FAILURE, TIMEOUT
 from harness.response_parser import INVALID_OUTPUT, SYNTAX_ERROR, SIGNATURE_VIOLATION
 
 SYSTEM_PROMPT = "You are an Automated Program Repair tool."
@@ -39,6 +39,11 @@ def build_feedback(category, failure=None, reason=None):
             "The fixed version is still not correct. "
             f"The code now fails on this test: {failure['test_name']} "
             f"with the following error: {failure['error_message']}"
+        )
+    if category == TIMEOUT:
+        return (
+            "The fixed version is still not correct. "
+            "The tests took too long to finish (over 30 seconds)."
         )
     if category in INVALID_CATEGORIES:
         return (
