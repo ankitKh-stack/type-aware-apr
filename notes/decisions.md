@@ -10,6 +10,7 @@
 - Non-thinking mode: every call sends `extra_body={"thinking": {"type": "disabled"}}`.
   Thinking mode is on by default and ignores `temperature`.
 - temperature = 1.0, max_tokens = 2000 on every call.
+- Implemented in `harness/llm_interface.py` (task 1.9, see below): request timeout 60 s, 3 retries.
 
 ## 2026-11-03 Pricing (USD per 1M tokens, deepseek-flash)
 | | Off-peak | Peak |
@@ -18,7 +19,7 @@
 | Input, cache miss | 0.15 | 0.30 |
 | Output | 0.60 | 1.20 |
 - Peak: 01:00–04:00 and 06:00–10:00 UTC, Mon–Fri. Weekends are off-peak.
-- Cost per call uses the rate for that call's timestamp (A2 §14 formula needs updating).
+- Cost per call uses the rate for that call's timestamp (A2 §14 formula needs updating). Implemented in `harness/llm_interface.py`; cost is computed in USD.
 - Plan: run the main experiment off-peak.
 - Budget currency (decided 2026-11-06): the budget is 50 CAD, as in A2. DeepSeek prices stay in USD, so converting to CAD needs an exchange rate (not yet chosen).
 
@@ -84,3 +85,42 @@
   - These invalid outputs skip test execution but still count as a try (A2).
 - The answer is dedented first, so an indented method is accepted, and the function is returned dedented.
 - The model answer is the text after `## Response` in attempt files, not the whole file, because the prompt also contains a python block.
+
+## 2026-11-06 Patch applier (task 1.7)
+- `harness/patch_applier.py` replaces the old function by ast line numbers, starting at the first decorator line if there are decorators.
+- It re-indents the parsed function to the original column and writes to a fresh file under `work/` (`work/` is gitignored).
+
+## 2026-11-06 Prompts (task 1.8)
+- `harness/prompts.py` holds the A2 §6.2 templates.
+- The C1 prompt matches the manual `attempt_C1.md` text exactly, with the test shown as the full path built from `test_command`.
+- System message: "You are an Automated Program Repair tool."
+- Feedback exists for SAME_FAILURE, NEW_FAILURE and the invalid categories. TIMEOUT and INFRA_ERROR had no template when this was written (TIMEOUT is decided in the loop section below).
+
+## 2026-11-06 LLM interface (task 1.9)
+- `harness/llm_interface.py`: model `deepseek-flash`, temperature 1.0, max_tokens 2000, thinking disabled (see LLM settings above).
+- Request timeout 60 s (our choice; A2 gives no number).
+- Up to 3 retries with delays of 2, 4 and 8 s on network, timeout, rate-limit and server errors. openai's own retries are turned off.
+- An authentication error is not retried and stops the program.
+- If retries run out, the call returns text `None` and an error.
+- Cost is in USD using the peak/off-peak table above; CAD conversion is still undecided.
+
+## 2026-11-06 Logger (task 1.10)
+- `harness/logger.py` writes per-attempt folders `results/<run_id>/trial_<k>/call_<n>/`, a readable `run.log`, and `results/<run_id>.jsonl`.
+- The whole `results/` folder is gitignored. Sample runs get copied into `examples/` on purpose later.
+
+## 2026-11-06 Windows: use `python -m pip`
+- Windows has two Pythons (Store 3.13 and 3.14.6). Bare `pip` installs into the wrong one.
+- All install steps use `python -m pip`, including `setup.bat` later.
+
+## 2026-11-06 Experiment loop rules (task 1.11)
+- The conversation restarts after 3 exchanges. A trial stops at a plausible patch or 10 counted calls.
+- INFRA_ERROR does not count. 3 infra errors in a trial stop it as infra_failure. A Docker infra error is retried once.
+- A PASS is rerun 3 more times. A failing rerun gives that rerun's category.
+- TIMEOUT feedback (Ankit's choice, not in A2): "The fixed version is still not correct. The tests took too long to finish (over 30 seconds)."
+- NEW_FAILURE feedback names the first failing test (bug-exposing, or one that passes with the fix) in the test results order.
+- "Plausible" only means the tests pass; correctness is for human review.
+
+## Observations (not decisions; revisit when real runs answer them)
+- Stray tokens (task 1.9): two short test calls returned stray tokens at the end of the text (e.g. "Hello! I全国助残日"). The code passes content through unchanged. Watch whether real code answers stay clean.
+- First-block rule (task 1.11): A2's first-python-block rule cost one try in trial 1. The answer showed a one-line snippet before the full function, which gave SYNTAX_ERROR. We keep A2's rule for now.
+- First real run: 3 C1 trials on requests-3179, all plausible, total cost about 0.00096 USD.

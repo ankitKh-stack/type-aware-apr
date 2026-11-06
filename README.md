@@ -37,14 +37,17 @@ Each bug and condition pair is run 3 times.
   - Ubuntu/WSL: Python 3 (3.14), Docker and the `pyter` image.
   - About 20 GB of free disk space for the image (it is about 7.5 GB).
 - **Install:**
-  1. `pip install -r requirements.txt` (currently `openai` and `python-dotenv`).
+  1. Python packages (currently `openai` and `python-dotenv`):
+     - Windows: run `setup.bat` once. It checks python, docker and the `pyter` image, creates `.venv`, installs `requirements.txt` into it, and copies `.env.example` to `.env` if `.env` is missing.
+     - Ubuntu/WSL: `python3 -m venv .venv`, then `source .venv/bin/activate`, then `python -m pip install -r requirements.txt`.
+     - Always use `python -m pip`, never bare `pip` (a machine can have more than one Python).
   2. The `pyter` image: download the image `.tar` from the figshare link in the [PyTER README](https://github.com/kupl/PyTER), then run `docker import <downloaded-file>.tar pyter`.
   3. Check it worked: `docker images` should list a line starting with `pyter`.
 
 ## Layout
 
 ```
-harness/   pipeline code (a Python package; run modules from the repo root with python3 -m harness.NAME)
+harness/   pipeline code (a Python package; run modules from the repo root with python -m harness.NAME)
 bugs/      one JSON file per bug (bugs/requests-3179.json) plus a folder per bug
            (bugs/requests-3179/: models_buggy.py, models_fixed.py, baseline.json)
 docker/    Dockerfiles
@@ -54,26 +57,35 @@ results/   experiment logs
 
 ## How to run
 
-Run everything from the repo root.
+Run everything from the repo root. On Ubuntu/WSL, activate the venv first (`source .venv/bin/activate`).
 
 ```
-python3 -m harness.validator      (Windows: python -m harness.validator)
+run.bat                      (Windows: 3 trials of C1 on requests-3179)
+run.bat --trials 1           (extra arguments are passed through)
+python -m harness.run --bug requests-3179 --condition C1 --trials 3     (what run.bat runs; works on Ubuntu too)
+```
+
+Results go to `results/<run id>/` (one folder per step, plus `run.log`) and `results/<run id>.jsonl`. `results/` is gitignored. Add `--fake-llm FILE` to test the loop without calling the API.
+
+Full run (all bugs and conditions): TBD
+
+### Checks
+
+```
+python -m harness.validator
 ```
 
 Runs requests-3179 on the buggy and the fixed file, checks the bug, and writes `bugs/requests-3179/baseline.json` (the original errors and the tests that pass with the fix).
 
 ```
-python3 -m harness.classifier     (Windows: python -m harness.classifier)
+python -m harness.classifier
 ```
 
 Runs requests-3179 on the developer fix, the buggy code and the saved C1 answer, and prints the result for each (expected: PASS, SAME_FAILURE, PASS).
-`run.bat` is added at the end of stage 1 (task 1.12).
-
-Full run: TBD
 
 ## API key
 
-The DeepSeek API key goes in a local `.env` file, which `.gitignore` already excludes. Never commit the key.
+The DeepSeek API key goes in a local `.env` file, which `.gitignore` already excludes. Never commit the key. After `setup.bat` (or after copying `.env.example` to `.env` yourself), paste the key after `DEEPSEEK_API_KEY=`.
 
 ## Conventions
 
