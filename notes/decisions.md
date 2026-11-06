@@ -47,15 +47,21 @@
 
 ## 2026-11-06 Exit code is not pytest's exit code
 - The container script ends with `cat` of the XML, so the exit code is 0 even when tests fail.
-- Test results come from the XML only. A non-zero exit code or a missing XML means INFRA_ERROR.
+- Test results come from the XML only. A non-zero exit code or a missing XML means INFRA_ERROR (see the classifier labels below).
 
 ## 2026-11-06 Tests identified by name, failures compared by error message
 - Two of the four failing tests contain a TypeError that has nothing to do with the bug.
-- "Same failure" compares the error message of each bug-exposing test with the original, never the traceback (the traceback has memory addresses that change on every run).
+- SAME_FAILURE compares the error message of each bug-exposing test with the original, never the traceback (the traceback has memory addresses that change on every run).
+
+## 2026-11-06 Result Classifier labels (task 1.5)
+- Five labels, decided in this order: PASS, SAME_FAILURE, NEW_FAILURE, TIMEOUT, INFRA_ERROR.
+- PASS needs every bug-exposing test to pass AND every test in `baseline.json` to still pass. A baseline test missing from the results (for example, the module no longer imports) counts as failing.
+- INFRA_ERROR means no usable JUnit XML (marker missing or XML unparsable). TIMEOUT means the run timed out.
+- Verified on Ubuntu and Windows: the developer fix gives PASS, the buggy code gives SAME_FAILURE, a patch that raises RuntimeError gives NEW_FAILURE, and fake results give TIMEOUT and INFRA_ERROR.
 
 ## 2026-11-06 Bug validity check (task 1.4)
 - A bug is usable only if every bug-exposing test fails with a TypeError on the buggy code and passes with the developer fix.
-- The tests that pass with the fix are the baseline for the PASS rule in 1.5 (applies the plausible-patch rule above).
+- The tests that pass with the fix are the baseline for the PASS rule (applies the plausible-patch rule above; see the classifier labels below).
 
 ## 2026-11-06 `baseline.json` is committed
 - Location: `bugs/<id>/baseline.json`. Holds `original_errors` (test name to original error message) and `baseline_passing` (names of tests that pass with the fix).

@@ -60,7 +60,14 @@ Run everything from the repo root.
 python3 -m harness.validator      (Windows: python -m harness.validator)
 ```
 
-Runs requests-3179 on the buggy and the fixed file, checks the bug, and writes `bugs/requests-3179/baseline.json`. `run.bat` is added at the end of stage 1 (task 1.12).
+Runs requests-3179 on the buggy and the fixed file, checks the bug, and writes `bugs/requests-3179/baseline.json` (the original errors and the tests that pass with the fix).
+
+```
+python3 -m harness.classifier     (Windows: python -m harness.classifier)
+```
+
+Runs requests-3179 on the developer fix, the buggy code and the saved C1 answer, and prints the result for each (expected: PASS, SAME_FAILURE, PASS).
+`run.bat` is added at the end of stage 1 (task 1.12).
 
 Full run: TBD
 
@@ -76,5 +83,5 @@ The DeepSeek API key goes in a local `.env` file, which `.gitignore` already exc
 
 ## Authors
 
-- Ankit
-- Pravesh
+- Ankit (ankitKh-stack)
+- Pravesh (pravesh500)
