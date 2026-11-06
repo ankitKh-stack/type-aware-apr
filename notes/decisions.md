@@ -76,3 +76,11 @@
 ## 2026-11-06 Line endings
 - LF everywhere except `.bat` files, which are CRLF (`.gitattributes` enforces the `.bat` rule).
 - Files written by the harness use `newline="\n"` so Windows writes the same bytes as Ubuntu (checked: `baseline.json` is identical on both).
+
+## 2026-11-06 Response parser (task 1.6)
+- `harness/ast_tools.py` holds the shared helpers: `parse_source` (ignores SyntaxWarning from old docstrings) and `find_function(tree, class_name, function_name)`.
+- `harness/response_parser.py` takes the first python code block of a model answer (language python, py, python3, or none).
+  - No block or an empty block: INVALID_OUTPUT. A SyntaxError: SYNTAX_ERROR. A changed parameter list: SIGNATURE_VIOLATION (compares `ast.dump` of the args).
+  - These invalid outputs skip test execution but still count as a try (A2).
+- The answer is dedented first, so an indented method is accepted, and the function is returned dedented.
+- The model answer is the text after `## Response` in attempt files, not the whole file, because the prompt also contains a python block.
