@@ -47,12 +47,18 @@ Each bug and condition pair is run 3 times.
 ## Layout
 
 ```
-harness/   pipeline code (a Python package; run modules from the repo root with python -m harness.NAME)
-bugs/      one JSON file per bug (bugs/requests-3179.json) plus a folder per bug
-           (bugs/requests-3179/: models_buggy.py, models_fixed.py, baseline.json)
-docker/    Dockerfiles
-notes/     bug cards, decisions.md, meeting notes
-results/   experiment logs
+src/          pipeline code (a Python package; run modules from the repo root with python -m src.NAME)
+prompts/      prompt templates (loaded by src/prompts.py)
+config/       model_config.json (model, prices and other LLM settings, read by src/llm_interface.py)
+bugs/         one JSON file per bug (bugs/requests-3179.json) plus a folder per bug
+              (bugs/requests-3179/: models_buggy.py, models_fixed.py, baseline.json)
+tests/        test code and fixtures
+experiments/  practice scripts (experiments/practice/)
+examples/     example inputs, prompts, LLM responses and outputs (empty for now)
+feedback/     (empty for now)
+docker/       Dockerfiles
+notes/        bug cards, decisions.md, meeting notes
+results/      experiment logs
 ```
 
 ## How to run
@@ -62,7 +68,7 @@ Run everything from the repo root. On Ubuntu/WSL, activate the venv first (`sour
 ```
 run.bat                      (Windows: 3 trials of C1 on requests-3179)
 run.bat --trials 1           (extra arguments are passed through)
-python -m harness.run --bug requests-3179 --condition C1 --trials 3     (what run.bat runs; works on Ubuntu too)
+python -m src.run --bug requests-3179 --condition C1 --trials 3     (what run.bat runs; works on Ubuntu too)
 ```
 
 Results go to `results/<run id>/` (one folder per step, plus `run.log`) and `results/<run id>.jsonl`. `results/` is gitignored. Add `--fake-llm FILE` to test the loop without calling the API.
@@ -72,25 +78,25 @@ Full run (all bugs and conditions): TBD
 ### Checks
 
 ```
-python -m harness.validator
+python -m src.validator
 ```
 
 Runs requests-3179 on the buggy and the fixed file, checks the bug, and writes `bugs/requests-3179/baseline.json` (the original errors and the tests that pass with the fix).
 
 ```
-python -m harness.classifier
+python -m src.classifier
 ```
 
 Runs requests-3179 on the developer fix, the buggy code and the saved C1 answer, and prints the result for each (expected: PASS, SAME_FAILURE, PASS).
 
 ```
-python -m harness.clue_static requests-3179
+python -m src.clue_static requests-3179
 ```
 
 Runs mypy on the buggy function of requests-3179 and prints the static clue.
 
 ```
-python -m harness.clue_runtime requests-3179
+python -m src.clue_runtime requests-3179
 ```
 
 Runs the failing test of requests-3179 in the container and prints the runtime clue.
@@ -104,7 +110,6 @@ The DeepSeek API key goes in a local `.env` file, which `.gitignore` already exc
 - Line endings: LF everywhere, except `.bat` files, which must be CRLF. `.gitattributes` enforces the `.bat` rule. In VS Code, check the bottom-right corner says LF (CRLF for `.bat`).
 - Paths: use `pathlib.Path`, relative to the repo root in config files. No hard-coded `/home/...` or `C:\...`.
 - Open files with `encoding="utf-8"`. Run programs as a list with `subprocess.run`, never `shell=True`.
-
 
 ## Authors
 
