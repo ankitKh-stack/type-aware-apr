@@ -1,7 +1,7 @@
 """Send one manual repair attempt for requests-3179 to DeepSeek (step 1.7).
 
-Usage: python harness/manual_attempt.py C1   (no clues)
-       python harness/manual_attempt.py C4   (runtime + static clues)
+Usage: python experiments/practice/manual_attempt.py C1   (no clues)
+       python experiments/practice/manual_attempt.py C4   (runtime + static clues)
 """
 import os
 import sys
@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 CONDITION = sys.argv[1] if len(sys.argv) > 1 else ""
 if CONDITION not in ("C1", "C4"):
-    sys.exit("Usage: python harness/manual_attempt.py C1|C4")
+    sys.exit("Usage: python experiments/practice/manual_attempt.py C1|C4")
 
 BUG_DIR = "notes/requests-3179"
 FIRST_LINE, LAST_LINE = 789, 812  # json() in models_buggy.py

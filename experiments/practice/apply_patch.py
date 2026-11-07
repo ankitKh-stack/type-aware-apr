@@ -1,6 +1,6 @@
 """Splice an LLM's json() from attempt_C?.md into a copy of models_buggy.py.
 
-Usage: python harness/apply_patch.py C1   -> writes notes/requests-3179/models_C1.py
+Usage: python experiments/practice/apply_patch.py C1   -> writes notes/requests-3179/models_C1.py
 """
 import os
 import re

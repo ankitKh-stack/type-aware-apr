@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timezone
 
-from harness.test_runner import REPO_ROOT
+from src.test_runner import REPO_ROOT
 
 RESULTS_DIR = REPO_ROOT / "results"
 

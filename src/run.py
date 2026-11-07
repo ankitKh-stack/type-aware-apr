@@ -3,16 +3,16 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from harness.ast_tools import parse_source, find_function
-from harness.classifier import PASS, SAME_FAILURE, NEW_FAILURE, INFRA_ERROR, classify
-from harness.failure_info import extract_xml, parse_testcases, build_failure_record
-from harness.llm_interface import call_llm, MODEL, TEMPERATURE, MAX_TOKENS
-from harness.logger import RunLogger
-from harness.patch_applier import apply_patch
-from harness.prompts import SYSTEM_PROMPT, build_prompt, build_feedback, function_source
-from harness.response_parser import parse_response
-from harness.test_runner import REPO_ROOT, load_bug, run_tests
-from harness.validator import load_baseline
+from src.ast_tools import parse_source, find_function
+from src.classifier import PASS, SAME_FAILURE, NEW_FAILURE, INFRA_ERROR, classify
+from src.failure_info import extract_xml, parse_testcases, build_failure_record
+from src.llm_interface import call_llm, MODEL, TEMPERATURE, MAX_TOKENS
+from src.logger import RunLogger
+from src.patch_applier import apply_patch
+from src.prompts import SYSTEM_PROMPT, build_prompt, build_feedback, function_source
+from src.response_parser import parse_response
+from src.test_runner import REPO_ROOT, load_bug, run_tests
+from src.validator import load_baseline
 
 MAX_CALLS = 10
 EXCHANGES = 3
@@ -237,7 +237,7 @@ def main():
     try:
         baseline = load_baseline(bug)
     except FileNotFoundError:
-        sys.exit("baseline.json is missing: run python -m harness.validator first")
+        sys.exit("baseline.json is missing: run python -m src.validator first")
 
     buggy_path = REPO_ROOT / bug["buggy_file"]
     source = buggy_path.read_text(encoding="utf-8")

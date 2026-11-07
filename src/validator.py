@@ -1,7 +1,7 @@
 import json
 
-from harness.failure_info import extract_xml, parse_testcases
-from harness.test_runner import REPO_ROOT, load_bug, run_tests
+from src.failure_info import extract_xml, parse_testcases
+from src.test_runner import REPO_ROOT, load_bug, run_tests
 
 FAIL_STATUSES = ("failed", "error")
 

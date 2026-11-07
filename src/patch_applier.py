@@ -1,4 +1,4 @@
-from harness.ast_tools import parse_source, find_function
+from src.ast_tools import parse_source, find_function
 
 
 def apply_patch(source, class_name, function_name, new_function):
@@ -20,8 +20,8 @@ def apply_patch(source, class_name, function_name, new_function):
 
 
 if __name__ == "__main__":
-    from harness.response_parser import parse_response
-    from harness.test_runner import REPO_ROOT, load_bug
+    from src.response_parser import parse_response
+    from src.test_runner import REPO_ROOT, load_bug
 
     bug = load_bug("requests-3179")
     source = (REPO_ROOT / bug["buggy_file"]).read_text(encoding="utf-8")

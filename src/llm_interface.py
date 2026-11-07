@@ -1,3 +1,4 @@
+import json
 import os
 import time
 from datetime import datetime, timezone
@@ -14,15 +15,16 @@ from openai import (
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
-MODEL = "deepseek-flash"
-TEMPERATURE = 1.0
-MAX_TOKENS = 2000
-REQUEST_TIMEOUT = 60
-RETRY_DELAYS = [2, 4, 8]
-PRICES = {  # USD per 1M tokens
-    "off_peak": {"hit": 0.003, "miss": 0.15, "out": 0.60},
-    "peak": {"hit": 0.006, "miss": 0.30, "out": 1.20},
-}
+CONFIG = json.loads(
+    (Path(__file__).resolve().parent.parent / "config" / "model_config.json").read_text(encoding="utf-8")
+)
+MODEL = CONFIG["model"]
+BASE_URL = CONFIG["base_url"]
+TEMPERATURE = CONFIG["temperature"]
+MAX_TOKENS = CONFIG["max_tokens"]
+REQUEST_TIMEOUT = CONFIG["request_timeout_s"]
+RETRY_DELAYS = CONFIG["retry_delays_s"]
+PRICES = CONFIG["prices_usd_per_1m_tokens"]  # USD per 1M tokens
 RETRYABLE = (APIConnectionError, APITimeoutError, InternalServerError, RateLimitError)
 
 
@@ -40,7 +42,7 @@ def compute_cost(hit, miss, out, when):
 def call_llm(messages):
     client = OpenAI(
         api_key=os.environ["DEEPSEEK_API_KEY"],
-        base_url="https://api.deepseek.com",
+        base_url=BASE_URL,
         timeout=REQUEST_TIMEOUT,
         max_retries=0,
     )
@@ -54,7 +56,7 @@ def call_llm(messages):
                 messages=messages,
                 temperature=TEMPERATURE,
                 max_tokens=MAX_TOKENS,
-                extra_body={"thinking": {"type": "disabled"}},
+                extra_body={"thinking": {"type": CONFIG["thinking"]}},
             )
             break
         except RETRYABLE as exc:
@@ -93,7 +95,7 @@ if __name__ == "__main__":
     print("off-peak cost:", compute_cost(0, 351, 252, off), "(expect 0.00020385)")
     print("peak cost:    ", compute_cost(0, 351, 252, peak), "(expect 0.0004077)")
 
-    from harness.prompts import SYSTEM_PROMPT
+    from src.prompts import SYSTEM_PROMPT
 
     result = call_llm([
         {"role": "system", "content": SYSTEM_PROMPT},

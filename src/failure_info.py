@@ -61,7 +61,7 @@ def build_failure_record(cases, bug_exposing_tests):
 
 
 if __name__ == "__main__":
-    from harness.test_runner import REPO_ROOT, load_bug, run_tests
+    from src.test_runner import REPO_ROOT, load_bug, run_tests
 
     bug = load_bug("requests-3179")
     result = run_tests(bug, REPO_ROOT / bug["buggy_file"])

@@ -22,7 +22,7 @@ def find_function(tree, class_name, function_name):
 
 
 if __name__ == "__main__":
-    from harness.test_runner import REPO_ROOT, load_bug
+    from src.test_runner import REPO_ROOT, load_bug
 
     bug = load_bug("requests-3179")
     source = (REPO_ROOT / bug["buggy_file"]).read_text(encoding="utf-8")

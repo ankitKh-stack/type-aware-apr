@@ -1,8 +1,8 @@
 from xml.etree.ElementTree import ParseError
 
-from harness.failure_info import extract_xml, parse_testcases
-from harness.test_runner import REPO_ROOT, load_bug, run_tests
-from harness.validator import FAIL_STATUSES, load_baseline
+from src.failure_info import extract_xml, parse_testcases
+from src.test_runner import REPO_ROOT, load_bug, run_tests
+from src.validator import FAIL_STATUSES, load_baseline
 
 PASS = "PASS"
 SAME_FAILURE = "SAME_FAILURE"

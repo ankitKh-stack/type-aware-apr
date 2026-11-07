@@ -2,7 +2,7 @@ import ast
 import re
 import textwrap
 
-from harness.ast_tools import parse_source
+from src.ast_tools import parse_source
 
 INVALID_OUTPUT = "INVALID_OUTPUT"
 SYNTAX_ERROR = "SYNTAX_ERROR"
@@ -51,8 +51,8 @@ def parse_response(text, original_node):
 
 
 if __name__ == "__main__":
-    from harness.ast_tools import find_function
-    from harness.test_runner import REPO_ROOT, load_bug
+    from src.ast_tools import find_function
+    from src.test_runner import REPO_ROOT, load_bug
 
     bug = load_bug("requests-3179")
     source = (REPO_ROOT / bug["buggy_file"]).read_text(encoding="utf-8")
@@ -69,8 +69,8 @@ if __name__ == "__main__":
         result = parse_response(text, original)
         print(label, "->", result["category"], "|", result["reason"])
     print("--- real C1 answer ---")
-    from harness.ast_tools import parse_source, find_function
-    from harness.test_runner import REPO_ROOT
+    from src.ast_tools import parse_source, find_function
+    from src.test_runner import REPO_ROOT
     text = (REPO_ROOT / "notes" / "requests-3179" / "attempt_C1.md").read_text(encoding="utf-8")
     response = text.split("## Response", 1)[1]
     buggy = (REPO_ROOT / "bugs" / "requests-3179" / "models_buggy.py").read_text(encoding="utf-8")

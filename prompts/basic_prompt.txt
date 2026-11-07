@@ -1,0 +1,11 @@
+The following Python function contains a bug that makes a test fail with a TypeError.
+
+{fence}python
+{buggy_function}
+{fence}
+
+The code fails on this test: {test_id}
+on this test line: {failing_line}
+with the following error: {error_message}
+
+Please provide the complete corrected function in a single python code block. Do not change the function name or its parameters.

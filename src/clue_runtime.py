@@ -3,12 +3,12 @@ import subprocess
 import uuid
 from pathlib import Path
 
-from harness.clue_static import function_line_range
-from harness.clues import ClueResult
-from harness.test_runner import REPO_ROOT, load_bug
+from src.clue_static import function_line_range
+from src.clues import ClueResult
+from src.test_runner import REPO_ROOT, load_bug
 
 MARKER = "===RTCLUES==="
-PLUGIN_FILE = REPO_ROOT / "harness" / "plugins" / "rt_collector.py"
+PLUGIN_FILE = REPO_ROOT / "src" / "plugins" / "rt_collector.py"
 PLUGIN_IN_CONTAINER = "/opt/apr/rt_collector.py"
 TIMEOUT = 30  # seconds, same as the test runner
 

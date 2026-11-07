@@ -1,0 +1,13 @@
+{
+  "model": "deepseek-flash",
+  "base_url": "https://api.deepseek.com",
+  "temperature": 1.0,
+  "max_tokens": 2000,
+  "request_timeout_s": 60,
+  "retry_delays_s": [2, 4, 8],
+  "thinking": "disabled",
+  "prices_usd_per_1m_tokens": {
+    "off_peak": {"hit": 0.003, "miss": 0.15, "out": 0.60},
+    "peak": {"hit": 0.006, "miss": 0.30, "out": 1.20}
+  }
+}

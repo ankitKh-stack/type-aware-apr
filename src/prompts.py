@@ -1,7 +1,14 @@
-from harness.classifier import SAME_FAILURE, NEW_FAILURE, TIMEOUT
-from harness.response_parser import INVALID_OUTPUT, SYNTAX_ERROR, SIGNATURE_VIOLATION
+from src.classifier import SAME_FAILURE, NEW_FAILURE, TIMEOUT
+from src.response_parser import INVALID_OUTPUT, SYNTAX_ERROR, SIGNATURE_VIOLATION
+from src.test_runner import REPO_ROOT
 
-SYSTEM_PROMPT = "You are an Automated Program Repair tool."
+
+def load_template(name):
+    path = REPO_ROOT / "prompts" / name
+    return path.read_bytes().decode("utf-8").replace("\r\n", "\n").rstrip("\n")
+
+
+SYSTEM_PROMPT = load_template("system_prompt.txt")
 FENCE = "`" * 3
 INVALID_CATEGORIES = (INVALID_OUTPUT, SYNTAX_ERROR, SIGNATURE_VIOLATION)
 
@@ -17,48 +24,35 @@ def build_prompt(bug, failure, buggy_function, clues=None, condition="C1"):
     if condition != "C1":
         raise NotImplementedError("clue blocks are added in stage 2")
     test_id = bug["test_command"].split(" ", 1)[1] + "::" + failure["test_name"]
-    return (
-        "The following Python function contains a bug that makes a test fail with a TypeError.\n\n"
-        f"{FENCE}python\n{buggy_function}\n{FENCE}\n\n"
-        f"The code fails on this test: {test_id}\n"
-        f"on this test line: {failure['failing_line']}\n"
-        f"with the following error: {failure['error_message']}\n\n"
-        "Please provide the complete corrected function in a single python code block. "
-        "Do not change the function name or its parameters."
+    return load_template("basic_prompt.txt").format(
+        fence=FENCE,
+        buggy_function=buggy_function,
+        test_id=test_id,
+        failing_line=failure["failing_line"],
+        error_message=failure["error_message"],
     )
 
 
 def build_feedback(category, failure=None, reason=None):
     if category == SAME_FAILURE:
-        return (
-            "The fixed version is still not correct. "
-            "It still does not fix the original test failure."
-        )
+        return load_template("feedback_same_failure.txt")
     if category == NEW_FAILURE:
-        return (
-            "The fixed version is still not correct. "
-            f"The code now fails on this test: {failure['test_name']} "
-            f"with the following error: {failure['error_message']}"
+        return load_template("feedback_new_failure.txt").format(
+            test_name=failure["test_name"], error_message=failure["error_message"]
         )
     if category == TIMEOUT:
-        return (
-            "The fixed version is still not correct. "
-            "The tests took too long to finish (over 30 seconds)."
-        )
+        return load_template("feedback_timeout.txt")
     if category in INVALID_CATEGORIES:
-        return (
-            f"Your previous answer could not be used: {reason}. "
-            "Please return only the complete corrected function in one python code block."
-        )
+        return load_template("feedback_invalid_output.txt").format(reason=reason)
     raise ValueError(f"no feedback template for category {category}")
 
 
 if __name__ == "__main__":
     import difflib
 
-    from harness.ast_tools import parse_source, find_function
-    from harness.failure_info import extract_xml, parse_testcases, build_failure_record
-    from harness.test_runner import REPO_ROOT, load_bug, run_tests
+    from src.ast_tools import parse_source, find_function
+    from src.failure_info import extract_xml, parse_testcases, build_failure_record
+    from src.test_runner import REPO_ROOT, load_bug, run_tests
 
     bug = load_bug("requests-3179")
     buggy_path = REPO_ROOT / bug["buggy_file"]

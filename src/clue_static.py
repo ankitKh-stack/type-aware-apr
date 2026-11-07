@@ -4,8 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from harness.ast_tools import find_function, parse_source
-from harness.clues import ClueResult
+from src.ast_tools import find_function, parse_source
+from src.clues import ClueResult
 
 MYPY_TIMEOUT = 30  # seconds (our choice; A2 gives no number)
 MYPY_FLAGS = [
@@ -65,7 +65,7 @@ def static_clue(bug, source_path):
 
 
 if __name__ == "__main__":
-    from harness.test_runner import REPO_ROOT, load_bug
+    from src.test_runner import REPO_ROOT, load_bug
 
     bug = load_bug(sys.argv[1])
     path = REPO_ROOT / (sys.argv[2] if len(sys.argv) > 2 else bug["buggy_file"])
