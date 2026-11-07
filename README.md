@@ -89,6 +89,12 @@ python -m harness.clue_static requests-3179
 
 Runs mypy on the buggy function of requests-3179 and prints the static clue.
 
+```
+python -m harness.clue_runtime requests-3179
+```
+
+Runs the failing test of requests-3179 in the container and prints the runtime clue.
+
 ## API key
 
 The DeepSeek API key goes in a local `.env` file, which `.gitignore` already excludes. Never commit the key. After `setup.bat` (or after copying `.env.example` to `.env` yourself), paste the key after `DEEPSEEK_API_KEY=`.
@@ -98,6 +104,7 @@ The DeepSeek API key goes in a local `.env` file, which `.gitignore` already exc
 - Line endings: LF everywhere, except `.bat` files, which must be CRLF. `.gitattributes` enforces the `.bat` rule. In VS Code, check the bottom-right corner says LF (CRLF for `.bat`).
 - Paths: use `pathlib.Path`, relative to the repo root in config files. No hard-coded `/home/...` or `C:\...`.
 - Open files with `encoding="utf-8"`. Run programs as a list with `subprocess.run`, never `shell=True`.
+
 
 ## Authors
 

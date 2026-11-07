@@ -129,6 +129,12 @@
 - The runtime type collector runs as a separate small container run after a failed attempt (as A2 says), not inside the normal test run. Why: C0 and C1 runs stay untouched, and it costs about one extra 5 s run per failed patch.
 - The runtime clue records the locals plus every name and attribute chain on the failing line (for example `self.content`, `self.encoding`), not only locals (changes A2 §6.2). Why: for requests-3179 the useful facts are attributes, not locals.
 - Clue extractors live in new files (`harness/clue_static.py`, `harness/clue_runtime.py`) so they don't conflict with Pravesh's `run.py` and `prompts.py` work.
+- API: `runtime_clue(bug, models_path, test_names=None)` in `harness/clue_runtime.py` returns the same `ClueResult(text, failed, error)`. `test_names` defaults to the bug-exposing tests; Pravesh can pass the failing test named in feedback.
+- How it runs: a pytest plugin `harness/plugins/rt_collector.py` (Python 3.5 compatible), mounted read-only at `/opt/apr` and loaded with `-p rt_collector` in a separate fresh container run (same 30 s timeout, `docker kill` on timeout; Ankit's choice). It records the first watched test that fails, with any exception type, because a patched version can fail differently.
+- Frames: the innermost frame inside the project plus the buggy function's frame if different. Per frame: locals (max 10, skipping modules, classes, callables) plus every name and attribute chain on the failing line (max 10), values cut to 60 characters.
+- Text format: `in json (requests/models.py), line 7: self: Response = <Response [0]>, kwargs: dict = {}, self.encoding: NoneType = None, self.content: NoneType = None`. Line numbers are relative to the buggy function; in any other function they are the file line. All locals are kept (including `self`) so the clue is not hand-tuned; revisit after more bugs.
+- Failure cases return `failed=True` (no marker, timeout, plugin error, unreadable output).
+- Checked: on requests-3179 the buggy file gives the clue above and the fixed file gives empty text, identical on Ubuntu and Windows.
 
 ## 2026-11-06 Stage 2 Track A: static clue (mypy runner)
 - API: `static_clue(bug, source_path)` in `harness/clue_static.py` returns `ClueResult(text, failed, error)` from `harness/clues.py`. Empty text means nothing to report. `failed=True` means mypy crashed, timed out or the function was not found (A2 §8 tool-failure flag).
