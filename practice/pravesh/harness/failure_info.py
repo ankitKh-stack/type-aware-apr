@@ -35,7 +35,7 @@ def extract_failure_info(stdout, bug):
     parse_ok is False when there is no XML (for example, Docker failed).
     1.5 turns that into INFRA_ERROR.
     """
-    record = {"parse_ok": False, "tests": {}, "failing_tests": [], "first_failure": None}
+    record = {"parse_ok": False, "tests": {}, "failing_tests": [], "message":[], "first_failure": None}
 
     if JUNIT_MARKER not in stdout:
         return record
@@ -59,6 +59,7 @@ def extract_failure_info(stdout, bug):
 
     record["parse_ok"] = True
     record["failing_tests"] = sorted(problems)
+    record["messages"] = {name: (element.get("message") or "") for name, element in problems.items()}
 
     # Details for the first bug-exposing test that failed, in the bug file's order.
     for name in bug["bug_exposing_tests"]:
