@@ -9,7 +9,7 @@ from src.failure_info import extract_xml, parse_testcases, build_failure_record
 from src.llm_interface import call_llm, MODEL, TEMPERATURE, MAX_TOKENS
 from src.logger import RunLogger
 from src.patch_applier import apply_patch
-from src.prompts import SYSTEM_PROMPT, build_prompt, build_feedback, function_source
+from src.prompts import SYSTEM_PROMPT,CONDITIONS, build_prompt, build_feedback, function_source
 from src.response_parser import parse_response
 from src.test_runner import REPO_ROOT, load_bug, run_tests
 from src.validator import load_baseline
@@ -226,12 +226,13 @@ def run_trial(ctx, trial):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bug", default="requests-3179")
-    parser.add_argument("--condition", default="C1")
+    parser.add_argument("--condition", default="C1", choices = CONDITIONS)
     parser.add_argument("--trials", type=int, default=3)
     parser.add_argument("--fake-llm", default=None)
     args = parser.parse_args()
-    if args.condition != "C1":
-        parser.error("only condition C1 exists in stage 1")
+    NOT_WIRED_YET = {"C0", "C2", "C3", "C4"}
+    if args.condition in NOT_WIRED_YET:
+        parser.error(f"condition {args.condition} is not wired into the loop yet")
 
     bug = load_bug(args.bug)
     try:

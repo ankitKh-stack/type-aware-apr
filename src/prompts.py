@@ -1,7 +1,9 @@
 from src.classifier import SAME_FAILURE, NEW_FAILURE, TIMEOUT
 from src.response_parser import INVALID_OUTPUT, SYNTAX_ERROR, SIGNATURE_VIOLATION
 from src.test_runner import REPO_ROOT
-
+# The experiment's conditions (A2 §12). C0 = single-shot, C1 = no clues,
+# C2 = runtime clue, C3 = mypy clue, C4 = both.
+CONDITIONS = ("C0", "C1", "C2", "C3", "C4")
 
 def load_template(name):
     path = REPO_ROOT / "prompts" / name
@@ -21,8 +23,9 @@ def function_source(source, node):
 
 
 def build_prompt(bug, failure, buggy_function, clues=None, condition="C1"):
-    if condition != "C1":
-        raise NotImplementedError("clue blocks are added in stage 2")
+    if condition not in CONDITIONS:
+        raise ValueError(f"unknown condition {condition!r}, expected one of {CONDITIONS}")
+    # Clue blocks for C2-C4 are added in B3. Until then the prompt is C1's.
     test_id = bug["test_command"].split(" ", 1)[1] + "::" + failure["test_name"]
     return load_template("basic_prompt.txt").format(
         fence=FENCE,
