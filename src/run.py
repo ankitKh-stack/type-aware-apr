@@ -192,6 +192,14 @@ def run_trial(ctx, trial):
             outcome = "plausible"
             plausible_call = attempt
             break
+        if ctx["condition"] == "C0":
+            # Single-shot (A2 §12): each call is independent. No feedback,
+            # no history: the next call sends only the system message and
+            # the first prompt again, as a new conversation.
+            messages = list(initial)
+            conversation += 1
+            in_conversation = 0
+            continue
         feedback = make_feedback(category, out)
         logger.save_text(logger.call_dir(trial, attempt), "09_feedback.txt", feedback)
         if in_conversation >= EXCHANGES:
@@ -230,7 +238,7 @@ def main():
     parser.add_argument("--trials", type=int, default=3)
     parser.add_argument("--fake-llm", default=None)
     args = parser.parse_args()
-    NOT_WIRED_YET = {"C0", "C2", "C3", "C4"}
+    NOT_WIRED_YET = {"C2", "C3", "C4"}
     if args.condition in NOT_WIRED_YET:
         parser.error(f"condition {args.condition} is not wired into the loop yet")
 
