@@ -21,11 +21,29 @@ def function_source(source, node):
         first = min(d.lineno for d in node.decorator_list)
     return "\n".join(source.split("\n")[first - 1:node.end_lineno])
 
+def build_clue_blocks(condition, clues):
+    """The clue text for C2-C4 (A2 §6.2), placed before the "Please provide" line.
+
+    clues is a dict like {"runtime": ClueResult, "static": ClueResult}, or None.
+    A block is added only if its clue has text. An empty or failed clue adds
+    nothing, so the prompt is then the same as C1's (A2 §12).
+    """
+    clues = clues or {}
+    blocks = []
+    if condition in ("C2", "C4"):
+        runtime = clues.get("runtime")
+        if runtime is not None and runtime.text:
+            blocks.append(load_template("clue_runtime.txt").format(clue=runtime.text))
+    if condition in ("C3", "C4"):
+        static = clues.get("static")
+        if static is not None and static.text:
+            blocks.append(load_template("clue_static.txt").format(clue=static.text))
+    return "".join(block + "\n\n" for block in blocks)
+
 
 def build_prompt(bug, failure, buggy_function, clues=None, condition="C1"):
     if condition not in CONDITIONS:
         raise ValueError(f"unknown condition {condition!r}, expected one of {CONDITIONS}")
-    # Clue blocks for C2-C4 are added in B3. Until then the prompt is C1's.
     test_id = bug["test_command"].split(" ", 1)[1] + "::" + failure["test_name"]
     return load_template("basic_prompt.txt").format(
         fence=FENCE,
@@ -33,7 +51,10 @@ def build_prompt(bug, failure, buggy_function, clues=None, condition="C1"):
         test_id=test_id,
         failing_line=failure["failing_line"],
         error_message=failure["error_message"],
+        clue_blocks=build_clue_blocks(condition, clues),
     )
+
+
 
 
 def build_feedback(category, failure=None, reason=None):
