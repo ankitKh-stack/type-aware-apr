@@ -1,0 +1,16 @@
+# Candidate try-order for stage 3 (committed BEFORE any validation of the 10 new bugs)
+# Date: 2026-11-18
+# Method: sort the 11 IDs alphabetically, then random.Random(20261118).shuffle(ids)
+# Pool: the 11 bugs in the pyter image (4 requests in /pyter/benchmark, 7 luigi in /pyter/BugsInPy/benchmark)
+# Validate in this order; log every exclusion reason.
+requests-3368
+luigi-25
+luigi-3
+requests-3390
+requests-3179
+luigi-6
+luigi-14
+luigi-22
+luigi-4
+luigi-26
+requests-4723
