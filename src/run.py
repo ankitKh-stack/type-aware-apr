@@ -9,10 +9,12 @@ from src.failure_info import extract_xml, parse_testcases, build_failure_record
 from src.llm_interface import call_llm, MODEL, TEMPERATURE, MAX_TOKENS
 from src.logger import RunLogger
 from src.patch_applier import apply_patch
-from src.prompts import SYSTEM_PROMPT,CONDITIONS, build_prompt, build_feedback, function_source
+from src.prompts import SYSTEM_PROMPT,CONDITIONS, build_prompt, build_feedback, function_source, build_clue_blocks
 from src.response_parser import parse_response
 from src.test_runner import REPO_ROOT, load_bug, run_tests
 from src.validator import load_baseline
+from src.clue_runtime import runtime_clue
+from src.clue_static import static_clue
 
 MAX_CALLS = 10
 EXCHANGES = 3
@@ -71,6 +73,26 @@ def rerun_if_pass(bug, path, baseline, result, category):
             break
     return result, category, reruns
 
+def compute_clues(bug, condition, path, test_names=None):
+    """The clues this condition uses, computed on the file at path (A2 §6.2).
+
+    C2 = runtime, C3 = mypy, C4 = both. C0 and C1 get none, so they
+    never pay for the extra Docker run.
+    """
+    clues = {}
+    if condition in ("C2", "C4"):
+        clues["runtime"] = runtime_clue(bug, path, test_names)
+    if condition in ("C3", "C4"):
+        clues["static"] = static_clue(bug, path)
+    return clues
+
+
+def clue_record(clues):
+    """What gets logged for each clue (A2 §8, §17): its text, whether it had
+    anything to say, and whether the tool crashed (tool-failure flag)."""
+    return {name: {"text": c.text, "available": bool(c.text),
+                   "failed": c.failed, "error": c.error}
+            for name, c in clues.items()}
 
 def attempt_once(ctx, trial, attempt, messages):
     logger, bug, baseline = ctx["logger"], ctx["bug"], ctx["baseline"]
@@ -78,7 +100,7 @@ def attempt_once(ctx, trial, attempt, messages):
     logger.save_json(folder, "02_messages_sent.json", messages)
     llm_result = ctx["llm"](messages)
     out = {"llm": llm_result, "category": None, "reason": None,
-           "failure": None, "reruns": [], "test_seconds": 0.0}
+           "failure": None, "reruns": [], "test_seconds": 0.0, "patched_path":None}
     logger.save_json(folder, "03_llm_call.json", {k: v for k, v in llm_result.items() if k != "text"})
     logger.log(f"trial {trial} call {attempt} llm_call", "error" if llm_result["error"] else "ok")
     if llm_result["error"]:
@@ -101,6 +123,7 @@ def attempt_once(ctx, trial, attempt, messages):
                           parsed["function_source"])
     logger.save_text(folder, "06_patched_file.py", patched)
     patched_path = folder / "06_patched_file.py"
+    out["patched_path"]=patched_path
 
     result, category = test_and_classify(bug, patched_path, baseline)
     result, category, reruns = rerun_if_pass(bug, patched_path, baseline, result, category)
@@ -134,6 +157,7 @@ def run_trial(ctx, trial):
         {"role": "user", "content": ctx["first_prompt"]},
     ]
     messages = list(initial)
+    sent_clues = ctx["first_clues"] #clue record for what the next call sends
     conversation, in_conversation = 1, 0
     calls = attempt = infra = 0
     tokens_in = tokens_out = 0
@@ -143,6 +167,7 @@ def run_trial(ctx, trial):
 
     while calls < MAX_CALLS:
         attempt += 1
+        logger.save_json(logger.call_dir(trial, attempt), "02_clues.json", sent_clues)
         out = attempt_once(ctx, trial, attempt, messages)
         llm_result, category = out["llm"], out["category"]
         hit = llm_result.get("input_cache_hit_tokens", 0)
@@ -165,6 +190,8 @@ def run_trial(ctx, trial):
             "max_tokens": MAX_TOKENS,
             "timestamp": llm_result["timestamp"],
             "messages_sent": messages,
+            "clues": sent_clues,
+            "clue_tool_failure": any(c["failed"] for c in  sent_clues.values()),
             "response": llm_result["text"],
             "category": category,
             "reason": out["reason"],
@@ -197,13 +224,24 @@ def run_trial(ctx, trial):
             # no history: the next call sends only the system message and
             # the first prompt again, as a new conversation.
             messages = list(initial)
+            sent_clues = ctx["first_clues"]
             conversation += 1
             in_conversation = 0
             continue
         feedback = make_feedback(category, out)
+        feedback_clues = {}
+        if out["patched_path"] and category in (SAME_FAILURE, NEW_FAILURE):
+            # Fresh clues on the patched code (A2 §6.2). For NEW_FAILURE,
+            # look at the newly failing test instead of the original ones.
+            names = [out["failure"]["test_name"]] if category == NEW_FAILURE else None
+            feedback_clues = compute_clues(bug, ctx["condition"], out["patched_path"], names)
+            blocks = build_clue_blocks(ctx["condition"], feedback_clues)
+            if blocks:
+                feedback = feedback + "\n\n" + blocks.rstrip("\n")
         logger.save_text(logger.call_dir(trial, attempt), "09_feedback.txt", feedback)
         if in_conversation >= EXCHANGES:
             messages = list(initial)
+            sent_clues = ctx["first_clues"]
             conversation += 1
             in_conversation = 0
         else:
@@ -211,6 +249,9 @@ def run_trial(ctx, trial):
                 {"role": "assistant", "content": llm_result["text"]},
                 {"role": "user", "content": feedback},
             ]
+            sent_clues = clue_record(feedback_clues)
+
+
 
     summary = {
         "type": "run",
@@ -238,10 +279,6 @@ def main():
     parser.add_argument("--trials", type=int, default=3)
     parser.add_argument("--fake-llm", default=None)
     args = parser.parse_args()
-    NOT_WIRED_YET = {"C2", "C3", "C4"}
-    if args.condition in NOT_WIRED_YET:
-        parser.error(f"condition {args.condition} is not wired into the loop yet")
-
     bug = load_bug(args.bug)
     try:
         baseline = load_baseline(bug)
@@ -258,14 +295,20 @@ def main():
     cases = parse_testcases(extract_xml(first["stdout"]))
     failure = build_failure_record(cases, bug["bug_exposing_tests"])
     logger.save_json(logger.run_dir, "01_failure_record.json", failure)
-    first_prompt = build_prompt(bug, failure, function_source(source, original))
+    first_clues = compute_clues(bug, args.condition, buggy_path)
+    logger.save_json(logger.run_dir, "01_clues.json", clue_record(first_clues))
+    first_prompt = build_prompt(bug, failure, function_source(source, original),
+                                first_clues, args.condition)
+
+
+
 
     llm = make_fake_llm(args.fake_llm) if args.fake_llm else call_llm
     if args.fake_llm:
         print("using fake LLM answers from", args.fake_llm)
     ctx = {"bug": bug, "baseline": baseline, "source": source, "original": original,
            "logger": logger, "llm": llm, "first_prompt": first_prompt,
-           "condition": args.condition}
+           "condition": args.condition, "first_clues":clue_record(first_clues)}
     for trial in range(1, args.trials + 1):
         run_trial(ctx, trial)
 
