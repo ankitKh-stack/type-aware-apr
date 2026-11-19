@@ -272,18 +272,13 @@ def run_trial(ctx, trial):
     return summary
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--bug", default="requests-3179")
-    parser.add_argument("--condition", default="C1", choices = CONDITIONS)
-    parser.add_argument("--trials", type=int, default=3)
-    parser.add_argument("--fake-llm", default=None)
-    args = parser.parse_args()
-    bug = load_bug(args.bug)
+def build_context(bug_id, condition, fake_llm=None):
+    """Everything one run (one bug, one condition) needs. Also starts its logger."""
+    bug = load_bug(bug_id)
     try:
         baseline = load_baseline(bug)
     except FileNotFoundError:
-        sys.exit("baseline.json is missing: run python -m src.validator first")
+        sys.exit(f"baseline.json is missing for {bug_id}: run python -m src.validator first")
 
     buggy_path = REPO_ROOT / bug["buggy_file"]
     source = buggy_path.read_text(encoding="utf-8")
@@ -295,20 +290,28 @@ def main():
     cases = parse_testcases(extract_xml(first["stdout"]))
     failure = build_failure_record(cases, bug["bug_exposing_tests"])
     logger.save_json(logger.run_dir, "01_failure_record.json", failure)
-    first_clues = compute_clues(bug, args.condition, buggy_path)
+    first_clues = compute_clues(bug, condition, buggy_path)
     logger.save_json(logger.run_dir, "01_clues.json", clue_record(first_clues))
     first_prompt = build_prompt(bug, failure, function_source(source, original),
-                                first_clues, args.condition)
+                                first_clues, condition)
+
+    llm = make_fake_llm(fake_llm) if fake_llm else call_llm
+    if fake_llm:
+        print("using fake LLM answers from", fake_llm)
+    return {"bug": bug, "baseline": baseline, "source": source, "original": original,
+            "logger": logger, "llm": llm, "first_prompt": first_prompt,
+            "condition": condition, "first_clues": clue_record(first_clues)}
 
 
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--bug", default="requests-3179")
+    parser.add_argument("--condition", default="C1", choices=CONDITIONS)
+    parser.add_argument("--trials", type=int, default=3)
+    parser.add_argument("--fake-llm", default=None)
+    args = parser.parse_args()
 
-
-    llm = make_fake_llm(args.fake_llm) if args.fake_llm else call_llm
-    if args.fake_llm:
-        print("using fake LLM answers from", args.fake_llm)
-    ctx = {"bug": bug, "baseline": baseline, "source": source, "original": original,
-           "logger": logger, "llm": llm, "first_prompt": first_prompt,
-           "condition": args.condition, "first_clues":clue_record(first_clues)}
+    ctx = build_context(args.bug, args.condition, args.fake_llm)
     for trial in range(1, args.trials + 1):
         run_trial(ctx, trial)
 
