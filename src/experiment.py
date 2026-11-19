@@ -12,6 +12,7 @@ State lives in results/experiments/<experiment id>/ (results/ is git-ignored).
 import argparse
 import json
 import random
+import time
 from datetime import datetime, timezone
 
 from src.prompts import CONDITIONS
@@ -66,6 +67,7 @@ def append_progress(folder, record):
 
 def run_unit(unit, fake_llm):
     """Run one bug x condition x trial and return its progress record."""
+    start = time.monotonic()
     ctx = build_context(unit["bug"], unit["condition"], fake_llm)
     summary = run_trial(ctx, unit["trial"])
     return {**unit,
@@ -73,6 +75,7 @@ def run_unit(unit, fake_llm):
             "outcome": summary["outcome"],
             "calls_used": summary["calls_used"],
             "cost_usd": summary["total_cost_usd"],
+            "wall_seconds": round(time.monotonic() - start, 1),
             "finished_at": now_utc()}
 
 
