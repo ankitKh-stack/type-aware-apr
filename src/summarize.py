@@ -50,6 +50,18 @@ def avg(values):
 def fmt(value, digits=1):
     return "-" if value is None else f"{value:.{digits}f}"
 
+def resolve_id(experiment_id):
+    """'latest' means the experiment whose plan.json was created most recently."""
+    if experiment_id != "latest":
+        return experiment_id
+    plans = []
+    for path in EXPERIMENTS_DIR.glob("*/plan.json"):
+        plan = json.loads(path.read_text(encoding="utf-8"))
+        plans.append((plan.get("created_at", ""), path.parent.name))
+    if not plans:
+        sys.exit("No experiments found yet. Run an experiment first.")
+    return max(plans)[1]
+
 
 def main():
     config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
@@ -58,6 +70,8 @@ def main():
     parser.add_argument("--bugs-n", type=int, default=12, help="bugs in the main experiment")
     parser.add_argument("--trials-n", type=int, default=config["trials"], help="trials per bug and condition")
     args = parser.parse_args()
+    args.experiment_id = resolve_id(args.experiment_id)
+    
 
     folder = EXPERIMENTS_DIR / args.experiment_id
     if not (folder / "plan.json").exists():

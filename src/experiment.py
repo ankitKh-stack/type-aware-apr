@@ -91,7 +91,7 @@ def main():
     config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
 
     parser = argparse.ArgumentParser(description="Run bugs x conditions x trials.")
-    parser.add_argument("--bugs", nargs="+", default=["requests-3179"])
+    parser.add_argument("--bugs", nargs="+", default=config.get("bugs",["requests-3179"]))
     parser.add_argument("--conditions", nargs="+", choices=CONDITIONS, default=config["conditions"])
     parser.add_argument("--trials", type=int, default=config["trials"])
     parser.add_argument("--seed", type=int, default=config["seed"])
