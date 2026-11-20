@@ -1,0 +1,9 @@
+{
+  "bugs": ["requests-3179"],
+  "seed": 20261118,
+  "trials": 3,
+  "conditions": ["C0", "C1", "C2", "C3", "C4"],
+  "budget_cad": 50,
+  "usd_per_cad": 0.70,
+  "usd_per_cad_note": "PROVISIONAL - confirm the rate with Ankit before the main run"
+}
