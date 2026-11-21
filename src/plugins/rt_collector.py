@@ -28,6 +28,11 @@ _state = {"root": "", "done": False}
 
 def pytest_configure(config):
     _state["root"] = os.path.abspath(str(config.rootdir))
+    # unittest's assertRaises calls traceback.clear_frames() on ANY exception that
+    # passes through it (even one it does not expect), which wipes the local
+    # variables we want to read (seen on luigi-26). Clearing frames only saves
+    # memory, so turning it off cannot change a test's result.
+    traceback.clear_frames = lambda tb: None
 
 
 def _short_repr(value):

@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from src.ast_tools import find_function, parse_source
@@ -42,18 +43,30 @@ def static_clue(bug, source_path):
         return ClueResult(failed=True, error="target function not found in %s" % source_path.name)
     start, end = span
 
-    command = [sys.executable, "-m", "mypy"] + MYPY_FLAGS + [source_path.name]
-    try:
-        done = subprocess.run(
-            command, cwd=str(source_path.parent), capture_output=True,
-            encoding="utf-8", errors="replace", timeout=MYPY_TIMEOUT,
-        )
-    except subprocess.TimeoutExpired:
-        return ClueResult(failed=True, error="mypy timed out after %d s" % MYPY_TIMEOUT)
-    except OSError as exc:
-        return ClueResult(failed=True, error="could not start mypy: %s" % exc)
+    # Check a copy placed at its real package path (e.g. requests/utils.py, with empty
+    # __init__.py files), so relative imports like "from . import certs" resolve.
+    # Checking the bare file makes mypy stop with "No parent module" (exit code 2).
+    with tempfile.TemporaryDirectory() as tmp:
+        rel = Path(bug["target_file"])
+        copy = Path(tmp) / rel
+        copy.parent.mkdir(parents=True, exist_ok=True)
+        for package in rel.parents:
+            if str(package) != ".":
+                (Path(tmp) / package / "__init__.py").touch()
+        copy.write_text(source, encoding="utf-8")
+        command = [sys.executable, "-m", "mypy"] + MYPY_FLAGS + [rel.as_posix()]
+        try:
+            done = subprocess.run(
+                command, cwd=tmp, capture_output=True,
+                encoding="utf-8", errors="replace", timeout=MYPY_TIMEOUT,
+            )
+        except subprocess.TimeoutExpired:
+            return ClueResult(failed=True, error="mypy timed out after %d s" % MYPY_TIMEOUT)
+        except OSError as exc:
+            return ClueResult(failed=True, error="could not start mypy: %s" % exc)
     if done.returncode not in (0, 1):  # 0 = clean, 1 = errors found, 2 = mypy crashed
-        return ClueResult(failed=True, error="mypy exit code %d: %s" % (done.returncode, done.stderr.strip()[:300]))
+        detail = (done.stderr.strip() or done.stdout.strip())[:300]
+        return ClueResult(failed=True, error="mypy exit code %d: %s" % (done.returncode, detail))
 
     lines = []
     for raw in done.stdout.splitlines():
