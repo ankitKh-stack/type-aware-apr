@@ -1,0 +1,19 @@
+# Frozen core set for the main experiment (stage 3, gate G3)
+# Frozen: 2026-11-21. Pool: the 11 bugs in the PyTER image, tried in the order in bugs/try-order.txt.
+# All 11 passed validation (3 runs each, identical results). Exclusions below were decided after validation.
+# Practice bugs (stage 2) are also in this set; see notes/decisions.md.
+requests-3368
+luigi-25
+luigi-3
+requests-3390
+requests-3179
+luigi-14
+luigi-22
+luigi-4
+luigi-26
+requests-4723
+#
+# EXCLUDED
+# luigi-6: valid, but the developer fix spans 8 functions and test_tuple_dict needs TupleParameter
+#          values to be normalised; no edit to a single function (the pipeline's repair scope) can make
+#          both bug-exposing tests pass. Decided by Ankit 2026-11-21.

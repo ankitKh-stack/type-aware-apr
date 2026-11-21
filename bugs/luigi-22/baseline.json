@@ -1,0 +1,14 @@
+{
+  "bug_id": "luigi-22",
+  "original_errors": {
+    "test_worker_prune_after_init": "TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'"
+  },
+  "baseline_passing": [
+    "test_load_broken_state",
+    "test_load_old_state",
+    "test_load_recovers_tasks_index",
+    "test_scheduler_with_config",
+    "test_scheduler_with_resources",
+    "test_worker_prune_after_init"
+  ]
+}

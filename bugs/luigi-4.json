@@ -1,0 +1,19 @@
+{
+  "id": "luigi-4",
+  "image": "pyter",
+  "workdir": "/pyter/BugsInPy/benchmark/luigi-4",
+  "target_file": "luigi/contrib/redshift.py",
+  "target_class": "S3CopyToTable",
+  "target_function": "copy",
+  "test_command": "pytest test/contrib/redshift_test.py test/contrib/redshift_test_neg.py",
+  "bug_exposing_tests": [
+    "test_s3_copy_with_nonetype_columns",
+    "test_s3_copy_with_nonetype_columns_noassert"
+  ],
+  "env_setup": [
+    "export PYENV_ROOT=/home/wonseok/.pyenv",
+    "export PATH=\"$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH\""
+  ],
+  "buggy_file": "bugs/luigi-4/redshift_buggy.py",
+  "fixed_file": "bugs/luigi-4/redshift_fixed.py"
+}

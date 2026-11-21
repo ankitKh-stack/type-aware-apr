@@ -17,6 +17,8 @@ def _run_and_parse(bug, models_file):
 
 
 def _exclusion_reason(bug, buggy, fixed):
+    if not bug["bug_exposing_tests"]:
+        return "no bug-exposing tests were found"
     for name in bug["bug_exposing_tests"]:
         if name not in buggy or name not in fixed:
             return f"bug-exposing test not found: {name}"

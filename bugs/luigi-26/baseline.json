@@ -1,0 +1,12 @@
+{
+  "bug_id": "luigi-26",
+  "original_errors": {
+    "test_missing_jar": "TypeError: expected str, bytes or os.PathLike object, not NoneType"
+  },
+  "baseline_passing": [
+    "test_good",
+    "test_missing_jar",
+    "test_remote_job",
+    "test_remote_job_missing_config"
+  ]
+}

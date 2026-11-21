@@ -1,0 +1,18 @@
+{
+  "id": "luigi-14",
+  "image": "pyter",
+  "workdir": "/pyter/BugsInPy/benchmark/luigi-14",
+  "target_file": "luigi/scheduler.py",
+  "target_class": "Task",
+  "target_function": "has_excessive_failures",
+  "test_command": "pytest test/central_planner_test.py test/central_planner_test_neg.py",
+  "bug_exposing_tests": [
+    "test_no_crash_on_only_disable_hard_timeout"
+  ],
+  "env_setup": [
+    "export PYENV_ROOT=/home/wonseok/.pyenv",
+    "export PATH=\"$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH\""
+  ],
+  "buggy_file": "bugs/luigi-14/scheduler_buggy.py",
+  "fixed_file": "bugs/luigi-14/scheduler_fixed.py"
+}

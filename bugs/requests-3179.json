@@ -5,7 +5,7 @@
   "target_file": "requests/models.py",
   "target_class": "Response",
   "target_function": "json",
-  "test_command": "pytest tests/test_requests.py::TestRequests",
+  "test_command": "pytest tests/test_requests.py",
   "bug_exposing_tests": [
     "test_response_json_when_content_is_None",
     "test_response_json_when_content_is_None_noassert"

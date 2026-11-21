@@ -1,0 +1,23 @@
+{
+  "bug_id": "luigi-4",
+  "original_errors": {
+    "test_s3_copy_with_nonetype_columns": "TypeError: object of type 'NoneType' has no len()",
+    "test_s3_copy_with_nonetype_columns_noassert": "TypeError: object of type 'NoneType' has no len()"
+  },
+  "baseline_passing": [
+    "test_copy_missing_creds",
+    "test_from_config",
+    "test_from_env",
+    "test_from_property",
+    "test_redshift_autocommit_query",
+    "test_redshift_unload_command",
+    "test_s3_copy_to_missing_table",
+    "test_s3_copy_to_missing_table_with_compression_encodings",
+    "test_s3_copy_to_table",
+    "test_s3_copy_to_temp_table",
+    "test_s3_copy_with_default_columns",
+    "test_s3_copy_with_nonetype_columns",
+    "test_s3_copy_with_nonetype_columns_noassert",
+    "test_s3_copy_with_valid_columns"
+  ]
+}

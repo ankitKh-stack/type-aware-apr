@@ -1,0 +1,18 @@
+{
+  "id": "luigi-3",
+  "image": "pyter",
+  "workdir": "/pyter/BugsInPy/benchmark/luigi-3",
+  "target_file": "luigi/parameter.py",
+  "target_class": "TupleParameter",
+  "target_function": "parse",
+  "test_command": "pytest test/parameter_test.py test/parameter_test_neg.py",
+  "bug_exposing_tests": [
+    "test_Serialize"
+  ],
+  "env_setup": [
+    "export PYENV_ROOT=/home/wonseok/.pyenv",
+    "export PATH=\"$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH\""
+  ],
+  "buggy_file": "bugs/luigi-3/parameter_buggy.py",
+  "fixed_file": "bugs/luigi-3/parameter_fixed.py"
+}

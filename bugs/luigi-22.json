@@ -1,0 +1,18 @@
+{
+  "id": "luigi-22",
+  "image": "pyter",
+  "workdir": "/pyter/BugsInPy/benchmark/luigi-22",
+  "target_file": "luigi/scheduler.py",
+  "target_class": "Worker",
+  "target_function": "__init__",
+  "test_command": "pytest test/scheduler_test.py test/scheduler_test_neg.py",
+  "bug_exposing_tests": [
+    "test_worker_prune_after_init"
+  ],
+  "env_setup": [
+    "export PYENV_ROOT=/home/wonseok/.pyenv",
+    "export PATH=\"$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH\""
+  ],
+  "buggy_file": "bugs/luigi-22/scheduler_buggy.py",
+  "fixed_file": "bugs/luigi-22/scheduler_fixed.py"
+}
