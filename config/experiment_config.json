@@ -1,5 +1,5 @@
 {
-  "bugs": ["requests-3179"],
+  "bugs_file": "bugs/core-set.txt",
   "seed": 20261118,
   "trials": 3,
   "conditions": ["C0", "C1", "C2", "C3", "C4"],

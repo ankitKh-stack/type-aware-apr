@@ -86,12 +86,23 @@ def stop_for_budget(folder, plan, spent):
     print(f"\nBudget reached: spent {spent:.6f} of {plan['budget_usd']:.6f} USD. Stopped cleanly.")
     print(f"Resume later with:  python -m src.experiment --resume {plan['experiment_id']}")
 
+def default_bugs(config):
+    """The bug list: from the file named in the config (one id per line,
+    # comments and blank lines ignored), else the config's "bugs" list."""
+    if "bugs_file" in config:
+        path = REPO_ROOT / config["bugs_file"]
+        with open(path, encoding="utf-8") as f:
+            lines = [line.split("#", 1)[0].strip() for line in f]
+        return [line for line in lines if line]
+    return config.get("bugs", ["requests-3179"])
+
+
 
 def main():
     config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
 
     parser = argparse.ArgumentParser(description="Run bugs x conditions x trials.")
-    parser.add_argument("--bugs", nargs="+", default=config.get("bugs",["requests-3179"]))
+    parser.add_argument("--bugs", nargs="+", default=default_bugs(config))
     parser.add_argument("--conditions", nargs="+", choices=CONDITIONS, default=config["conditions"])
     parser.add_argument("--trials", type=int, default=config["trials"])
     parser.add_argument("--seed", type=int, default=config["seed"])
