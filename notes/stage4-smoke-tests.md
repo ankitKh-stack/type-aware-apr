@@ -79,3 +79,10 @@ Saved results/experiments/20261126T173830Z/summary.json
 Ready for the full run (10 bugs x 5 conditions x 3 trials) once Ankit says go.
 
 Note: the static clue is empty for 8 of the 10 core bugs (only requests-3368 and requests-3390 give one), so C3 equals C1 and C4 equals C2 for those 8. The summary's closing line about requests-3179 is stale text in src/summarize.py, not a statement about this data.
+
+## Other 8 core bugs (Ankit, 2026-11-26)
+Experiment 20261126T180814Z: luigi-3, requests-3390, requests-3179, luigi-14, luigi-22, luigi-4, luigi-26, requests-4723; C0-C4, 1 trial, 40 runs, 0.019365 USD (0.0277 CAD), no infrastructure failures.
+- 39 of 40 runs plausible. Unsolved: requests-3390 C3 (10 calls). requests-3390 needed 3-5 calls in the other conditions (C0 3, C1 3, C2 5, C4 5).
+- All other bugs plausible in all 5 conditions, mostly on call 1 (luigi-26 and luigi-14 C0 needed 2 in some conditions; requests-3179 C3 needed 2).
+- Across both smoke experiments (50 runs): 47 plausible, 3 unsolved (luigi-25 C0, luigi-25 C1, requests-3390 C3); total 0.0376 USD. Projection for 150 runs: about 0.11 USD, about 3 hours (requests-3390 runs take 3-5 minutes each).
+- Risk: most bugs are solved on call 1 in nearly every condition, so differences between conditions will mostly come from luigi-25 and requests-3390.
