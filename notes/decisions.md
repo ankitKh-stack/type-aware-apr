@@ -23,7 +23,7 @@
 - Peak: 01:00–04:00 and 06:00–10:00 UTC, Mon–Fri. Weekends are off-peak.
 - Cost per call uses the rate for that call's timestamp (A2 §14 formula needs updating). Implemented in `src/llm_interface.py`; cost is computed in USD.
 - Plan: run the main experiment off-peak.
-- Budget currency (decided 2026-11-06): the budget is 50 CAD, as in A2. DeepSeek prices stay in USD, so converting to CAD needs an exchange rate (not yet chosen).
+- Budget currency (decided 2026-11-06): the budget is 50 CAD, as in A2. DeepSeek prices stay in USD. Exchange rate settled 2026-11-26 (set 2026-11-21): `usd_per_cad = 0.70`, i.e. 1 CAD = 0.70 USD, so the 50 CAD budget is 35 USD.
 
 ## 2026-11-03 Plausible patch rule (changes A2 §2/§14)
 - Some tests fail even with the developer's fix (e.g. requests-3179: test_pyopenssl_redirect
@@ -142,6 +142,7 @@
 - API: `static_clue(bug, source_path)` in `src/clue_static.py` returns `ClueResult(text, failed, error)` from `src/clues.py`. Empty text means nothing to report. `failed=True` means mypy crashed, timed out or the function was not found (A2 §8 tool-failure flag).
 - mypy runs on the host with `--check-untyped-defs --ignore-missing-imports --follow-imports=skip` and a 30 s timeout (our choice). It keeps only `error` lines inside the target function's line range (decorators included), recomputed on every patched file.
 - Line numbers in clues are relative to the function (line 1 = its first line, the decorator if there is one), because the model sees only the function (Ankit's choice; A2's example "line 4" is ambiguous). mypy's `[code]` suffix is stripped to match A2's example.
+- Update 2026-11-26: the static clue is empty for 8 of the 10 core bugs; see "Stage 4: static clue empty on 8 of 10 bugs" at the end.
 - `mypy==2.4.0` is added to `requirements.txt`. Test fixture: `tests/fixtures/toy/shop.py`.
 
 ## 2026-11-07 `harness/` renamed to `src/` (A3 layout) (commit 2a36499)
@@ -182,3 +183,10 @@
   - luigi-14's developer fix is larger than the one-function edit scope; correctness is judged by behaviour via the F1 checklists.
   - luigi-6 was excluded because no single-function edit can pass both of its bug-exposing tests.
   - Limitations: small regression baselines for luigi-25 (3 tests), luigi-26 (4) and luigi-22 (6).
+
+## 2026-11-26 Stage 4: static clue empty on 8 of 10 bugs
+- Finding: the static (mypy) clue is non-empty only for requests-3368 and requests-3390. On the other 8 core bugs it is empty, so C3 has the same first prompt as C1, and C4 the same as C2.
+- Decision (Ankit, option 1): run the full 150-run experiment as designed. No extractor change, no bug swap.
+- Analysis: compare C3 vs C1 separately on the 2 bugs where the static clue is present (6 runs per condition). Report "static clue empty on 8 of 10 bugs" as a finding and a limitation.
+- C3 can still differ from C1 after the first call, because the static clue is recomputed on each patched file.
+- State: `pravesh/stage-4` merged into `main` (a26899a). Ankit's smoke tests of all 10 bugs: 50 runs, 47 plausible, 0.0376 USD, no infra failures. The stale `usd_per_cad` note was removed from the config.
